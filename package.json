@@ -1,0 +1,27 @@
+{
+    "name": "canvas-card-materializer",
+    "version": "1.0.0",
+    "description": "Materialize Canvas cards into Markdown files while preserving connections and colors",
+    "main": "main.js",
+    "scripts": {
+        "dev": "node esbuild.config.mjs",
+        "build": "node esbuild.config.mjs production",
+        "version": "node version-bump.mjs && git add manifest.json versions.json"
+    },
+    "keywords": [
+        "obsidian",
+        "canvas",
+        "materialize",
+        "notes",
+        "productivity"
+    ],
+    "author": "redsheep913",
+    "license": "MIT",
+    "devDependencies": {
+        "@types/node": "^16.11.29",
+        "esbuild": "0.17.3",
+        "obsidian": "latest",
+        "tslib": "2.4.0",
+        "typescript": "4.9.5"
+    }
+}
