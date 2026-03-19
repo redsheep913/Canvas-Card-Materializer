@@ -183,6 +183,22 @@ export default class CanvasCardMaterializer extends Plugin {
 
         // Pass 1: 建立基礎檔案
         for (const node of selectedNodes) {
+
+			if (node.file instanceof TFile || (node as any).unknownData?.type === 'file') {
+                const existingFile = node.file instanceof TFile ? node.file : 
+                                   (this.app.vault.getAbstractFileByPath((node as any).file) as TFile);
+                
+                if (existingFile) {
+                    exportMap.set(node.id, {
+                        filename: existingFile.basename,
+                        text: "", // 已經有檔案了，不需要紀錄文字內容
+                        color: node.color ? String(node.color) : "0",
+                        fileObj: existingFile
+                    });
+                    continue; // 跳過下方的產檔逻辑，直接處理下一個節點
+                }
+            }
+			
             let fullText = node.text || (node.file ? node.file.basename : 'Untitled');
             const lines = fullText.split('\n');
             const firstLine = lines[0].trim(); 
@@ -262,26 +278,56 @@ export default class CanvasCardMaterializer extends Plugin {
             }
         }
 
-        // Pass 4: 原子交換 (Atomic Swap)
+        // --- Pass 4: 連線與群組保護的強制更新 ---
         const currentCanvas = canvas;
-        const allData = currentCanvas.getData();
+        const allData = currentCanvas.getData(); 
         const exportNodeIds = new Set(exportMap.keys());
+
         const updatedNodes = allData.nodes.map((n: any) => {
+            // 【重要】絕對不要動 type 為 group 的節點資料
+            if (n.type === 'group') return n;
+
             if (exportNodeIds.has(n.id)) {
+                if (n.type === 'file') return n;
                 const targetData = exportMap.get(n.id)!;
-                return { ...n, type: 'file', file: targetData.fileObj.path, text: undefined };
+                return { 
+                    ...n, 
+                    type: 'file', 
+                    file: targetData.fileObj.path,
+                    text: undefined 
+                };
             }
             return n;
         });
 
         currentCanvas.deselectAll();
-        currentCanvas.setData({ nodes: [], edges: [] }); 
 
+        // 1. 【核心策略】：只清空 Nodes，但絕對要保留 edges 和 groups 的「原始引用」
+        currentCanvas.setData({ 
+            nodes: [], 
+            edges: allData.edges || [], 
+            groups: allData.groups || [] // 確保清空時群組還在畫布上「等著」
+        });
+
+        // 2. 稍微縮短一點延遲，減少視覺上的閃爍 (100ms 通常就夠了)
         setTimeout(() => {
-            currentCanvas.setData({ nodes: updatedNodes, edges: allData.edges });
+            // 3. 回填更新後的節點，並確保順序跟原本一模一樣
+            // (這能解決圖層跑掉的問題，因為節點順序決定了渲染層級)
+            currentCanvas.setData({ 
+                nodes: updatedNodes, 
+                edges: allData.edges || [], 
+                groups: allData.groups || [] 
+            });
+
             currentCanvas.requestSave();
-            new Notice(`Successfully materialized ${exportMap.size} cards!`);
-        }, 50);
+            
+            // 4. 強制通知 Canvas 更新佈局 (Layout)
+            if (typeof currentCanvas.requestFrame === 'function') {
+                currentCanvas.requestFrame();
+            }
+
+            new Notice(`Successfully materialized ${exportMap.size} nodes!`);
+        }, 100);
     }
 
     async ensureFolderExists(path: string) {
