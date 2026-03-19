@@ -61,4 +61,4 @@ Documents/
 1.  Open **Obsidian Settings** \> **Community Plugins**.
 2.  Ensure **Restricted mode** is off.
 3.  Click **Browse** and search for `Canvas Card-Materializer` (once it's officially listed).
-4.  Alternatively, install manually via the [Releases](https://www.google.com/search?q=https://github.com/redsheep913/canvas-card-materializer/releases) page.
+4.  Alternatively, install manually via the [Releases](https://github.com/redsheep913/Canvas-Card-Materializer/releases) page.
