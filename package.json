@@ -1,6 +1,6 @@
 {
     "name": "canvas-card-materializer",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Materialize Canvas cards into Markdown files while preserving connections and colors",
     "main": "main.js",
     "scripts": {

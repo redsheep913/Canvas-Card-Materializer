@@ -1,7 +1,7 @@
 {
     "id": "canvas-card-materializer",
     "name": "Canvas Card-Materializer",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "minAppVersion": "1.4.0",
     "description": "Materialize Canvas cards into organized Markdown files with auto-folder categorization, preserving connections and colors.",
     "author": "redsheep913",
