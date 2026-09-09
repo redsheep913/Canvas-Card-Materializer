@@ -1,9 +1,9 @@
 {
     "id": "canvas-card-materializer",
     "name": "Canvas Card-Materializer",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "minAppVersion": "1.4.0",
-    "description": "Materialize Canvas cards into organized Markdown files with auto-folder categorization, preserving connections and colors.",
+    "description": "Materialize Canvas cards into permanent, organized Markdown files — bringing Heptabase-style card-based note-taking to Obsidian, with every connection and color preserved.",
     "author": "redsheep913",
     "authorUrl": "https://github.com/redsheep913",
     "isDesktopOnly": false

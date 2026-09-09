@@ -1,7 +1,7 @@
 {
     "name": "canvas-card-materializer",
-    "version": "1.0.2",
-    "description": "Materialize Canvas cards into Markdown files while preserving connections and colors",
+    "version": "1.0.3",
+    "description": "Materialize Canvas cards into permanent, organized Markdown files — bringing Heptabase-style card-based note-taking to Obsidian, with every connection and color preserved.",
     "main": "main.js",
     "scripts": {
         "dev": "node esbuild.config.mjs",
