@@ -12,6 +12,7 @@ Materialize Canvas cards into permanent, organized Markdown files — bringing H
 - **Structured metadata** — every materialized file records its Canvas origin in frontmatter (see table below), so connections stay queryable data instead of one-off text.
 - **Native links** — `canvas_out`/`canvas_in` are plain `[[wikilinks]]`, so they show up in Obsidian's Graph view and backlinks like any other link.
 - **Visual sync** — drag a materialized file back onto a Canvas and its saved `canvas_color` is restored automatically.
+- **Color tags** — a colored card also gets a `canvas-color/<name>` tag (e.g. `canvas-color/red`), so Obsidian's native tag pane/search can group cards by color, Heptabase-style.
 - **Safe by default** — filenames are deduplicated against your whole vault, not just the current batch, so materializing never silently overwrites an unrelated file with the same name.
 
 ## Frontmatter fields
@@ -22,6 +23,7 @@ Materialize Canvas cards into permanent, organized Markdown files — bringing H
 | `canvas_color` | string | The card's color at materialize time (`"0"`–`"6"`, or a custom hex) |
 | `canvas_out` | string[] | `[[wikilinks]]` to other materialized cards this one points to |
 | `canvas_in` | string[] | `[[wikilinks]]` from other materialized cards that point to this one |
+| `tags` | string[] | Includes a `canvas-color/<name>` tag matching `canvas_color` (skipped when the card has no color); other existing tags are preserved |
 
 ## How to use
 
