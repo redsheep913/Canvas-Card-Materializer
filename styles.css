@@ -1,0 +1,38 @@
+/* 卡片參照 chip (((card:id))) — 外觀比照 Obsidian 原生雙向連結（顏色 + 底線），
+   但底層是 span 不是真的 [[wikilink]]（目標不是 vault 檔案），這樣巢狀的 markdown
+   （粗體 / inline code / inline math）才能在裡面正常渲染，不會被連結語法本身影響 */
+.ccm-card-ref {
+    color: var(--link-color, var(--text-accent));
+    text-decoration: underline;
+    text-decoration-color: var(--link-decoration-color, currentColor);
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.ccm-card-ref:hover {
+    color: var(--link-color-hover, var(--text-accent-hover));
+}
+
+.ccm-card-ref p {
+    display: inline;
+    margin: 0;
+}
+
+.ccm-card-ref-broken {
+    opacity: 0.6;
+    text-decoration: line-through;
+}
+
+/* 拖曳分割卡片中的手形游標——用 !important + 萬用選擇器強制蓋過卡片編輯區（CM6）自己的
+   `cursor: text` 規則，否則游標停在卡片文字上時優先權比較高的內層樣式會贏，一直維持 I 形游標。
+   ccm-dragging-active 疊加在 ccm-dragging 之上（拖曳中兩個 class 同時存在），
+   用 :not() 排除避免跟 ccm-dragging 的規則互搶優先權 */
+body.ccm-dragging:not(.ccm-dragging-active),
+body.ccm-dragging:not(.ccm-dragging-active) * {
+    cursor: grab !important;
+}
+
+body.ccm-dragging-active,
+body.ccm-dragging-active * {
+    cursor: grabbing !important;
+}
