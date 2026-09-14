@@ -936,6 +936,18 @@ export default class CanvasCardMaterializer extends Plugin {
                     fm['canvas_id'] = id;
                     if (data.color) fm['canvas_color'] = data.color;
 
+                    // 用顏色同步一個 `canvas-color/<顏色名>` tag，讓 Obsidian 原生的 tag 面板/搜尋
+                    // 就能像 Heptabase 用顏色分類卡片那樣，把同色的筆記聚合起來看
+                    const existingTags: string[] = Array.isArray(fm['tags'])
+                        ? fm['tags']
+                        : (typeof fm['tags'] === 'string' && fm['tags'] ? [fm['tags']] : []);
+                    const withoutColorTags = existingTags.filter((t) => !t.startsWith('canvas-color/'));
+                    const colorTagName = data.color ? this.colorToTagName(data.color) : null;
+                    const nextTags = colorTagName
+                        ? Array.from(new Set([...withoutColorTags, `canvas-color/${colorTagName}`]))
+                        : withoutColorTags;
+                    if (nextTags.length > 0 || existingTags.length > 0) fm['tags'] = nextTags;
+
                     if (outLinks && outLinks.length > 0) {
                         const existing: string[] = Array.isArray(fm['canvas_out']) ? fm['canvas_out'] : [];
                         fm['canvas_out'] = Array.from(new Set([...existing, ...outLinks]));
@@ -1029,6 +1041,23 @@ export default class CanvasCardMaterializer extends Plugin {
 
     sanitizeFileName(name: string): string {
         return name.replace(/^#+\s*/, '').replace(/`/g, '').replace(/[\\/:"*?<>|#^[\]]/g, '').trim() || 'Untitled';
+    }
+
+    // 把 canvas_color 轉成人類可讀的 tag 名稱：1-6 是 Obsidian Canvas 內建的六種預設色，
+    // 其餘視為自訂 hex 色碼，直接拿掉 # 當 tag 用（"0" 代表卡片沒特別選色，不算一種顏色分類，不產生 tag）
+    private static readonly COLOR_TAG_NAMES: Record<string, string> = {
+        '1': 'red',
+        '2': 'orange',
+        '3': 'yellow',
+        '4': 'green',
+        '5': 'cyan',
+        '6': 'purple',
+    };
+
+    colorToTagName(color: string): string | null {
+        if (!color || color === '0') return null;
+        if (CanvasCardMaterializer.COLOR_TAG_NAMES[color]) return CanvasCardMaterializer.COLOR_TAG_NAMES[color];
+        return color.startsWith('#') ? color.slice(1).toLowerCase() : color;
     }
 }
 
