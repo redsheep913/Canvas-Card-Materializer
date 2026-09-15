@@ -1,7 +1,7 @@
 {
     "id": "canvas-card-materializer",
     "name": "Canvas Card-Materializer",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "minAppVersion": "1.4.0",
     "description": "Materialize Canvas cards into permanent, organized Markdown files — bringing Heptabase-style card-based note-taking, with every connection and color preserved.",
     "author": "redsheep913",
