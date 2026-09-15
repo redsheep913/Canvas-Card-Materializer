@@ -4,7 +4,6 @@
 .ccm-card-ref {
     color: var(--link-color, var(--text-accent));
     text-decoration: underline;
-    text-decoration-color: var(--link-decoration-color, currentColor);
     font-weight: bold;
     cursor: pointer;
 }
