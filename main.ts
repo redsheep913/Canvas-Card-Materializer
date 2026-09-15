@@ -96,6 +96,10 @@ export default class CanvasCardMaterializer extends Plugin {
     // 否則一旦拖曳完成把原文字換成 ((card:id)) chip，offset 剛好對得上的話會被舊紀錄誤判成
     // 「還是同一段既有選取」，導致同一段內容被重複抓取、重複建立新卡片
     private settledSelections = new WeakMap<EditorView, { from: number; to: number; text: string }>();
+    // 「這個 CM6 view 是不是 canvas 卡片」的判斷快取——這個 handler 對 Obsidian 裡所有編輯器都會
+    // 觸發（不只是 canvas），判斷本身要逐一比對所有開啟中 canvas 的 nodes，不便宜，
+    // 不能在高頻率的 mousemove 裡每次都重算；同一個 view 生命週期內這個答案不會變，只需要算一次
+    private isCanvasCardViewCache = new WeakMap<EditorView, boolean>();
     // 上一次手勢真正結束（放開/取消）的時間戳，配合 GESTURE_COOLDOWN_MS 擋掉放開後的殘留觸發事件
     private lastGestureEndTime = 0;
     // 用同一個函式參照才能正確 add/removeEventListener 成對
@@ -277,6 +281,17 @@ export default class CanvasCardMaterializer extends Plugin {
         return null;
     }
 
+    // 拖曳分割卡片的觸發邏輯掛在全域的 mousemove 上，對 Obsidian 裡所有編輯器都會觸發——
+    // 用這個快取版本讓「不是 canvas 卡片」的一般筆記編輯器，之後每次 mousemove 只需要查一次
+    // WeakMap（而不是每次都重跑一遍 findCanvasAndNodeForCmView 逐一比對所有 canvas nodes）
+    private isCanvasCardView(view: EditorView): boolean {
+        const cached = this.isCanvasCardViewCache.get(view);
+        if (cached !== undefined) return cached;
+        const result = this.findCanvasAndNodeForCmView(view) !== null;
+        this.isCanvasCardViewCache.set(view, result);
+        return result;
+    }
+
     // 註冊到 CM6 自己的事件處理管線（EditorView.domEventHandlers），而不是掛在 document 上——
     // 實測發現卡片進入編輯模式後，CM6 會在自己的 DOM 節點上處理 mousedown 且不冒泡出去，
     // 外部的 document 監聽器（不管 capture 或 bubble 階段）完全攔不到。
@@ -323,11 +338,18 @@ export default class CanvasCardMaterializer extends Plugin {
         const sel = view.state.selection.main;
         if (sel.empty) {
             this.settledSelections.delete(view);
-        } else {
-            const from = Math.min(sel.from, sel.to);
-            const to = Math.max(sel.from, sel.to);
-            this.settledSelections.set(view, { from, to, text: view.state.doc.sliceString(from, to) });
+            return;
         }
+
+        const from = Math.min(sel.from, sel.to);
+        const to = Math.max(sel.from, sel.to);
+
+        // 選取範圍跟已經記錄的完全一樣就不用重算——這個函式在使用者移動滑鼠時可能被高頻率呼叫，
+        // 選取範圍實際上沒有變動的話，沒必要每次都重新切一次字串出來
+        const existing = this.settledSelections.get(view);
+        if (existing && existing.from === from && existing.to === to) return;
+
+        this.settledSelections.set(view, { from, to, text: view.state.doc.sliceString(from, to) });
     }
 
     // 找到「目前游標所在位置」是否落在這個 view 目前的選取範圍內；不在範圍內或沒有選取都回傳 null
@@ -353,6 +375,7 @@ export default class CanvasCardMaterializer extends Plugin {
     private handleEditorDragStart(event: DragEvent, view: EditorView) {
         try {
             if (this.dragGesture) return;
+            if (!this.isCanvasCardView(view)) return;
 
             const hit = this.getSelectionOffsetUnderCoords(view, event.clientX, event.clientY);
             if (!hit) return;
@@ -420,6 +443,11 @@ export default class CanvasCardMaterializer extends Plugin {
                 this.checkDragThreshold(event.clientX, event.clientY);
                 return;
             }
+
+            // 這個 handler 對 Obsidian 裡所有編輯器都會觸發，不只是 canvas 卡片——不是 canvas 卡片
+            // 就直接跳過，避免對一般筆記編輯器做任何多餘的判斷（尤其是下面 markSelectionSettled
+            // 的字串切割，不然只要那個編輯器裡有選取文字、使用者又剛好在移動滑鼠，就會被白白觸發）
+            if (!this.isCanvasCardView(view)) return;
 
             // 只有「看起來像是按著」的狀態（真的按著滑鼠鍵，或三指拖曳合成出來的按住訊號）才要考慮
             // 觸發——純粹經過、沒有按著的游標移動不該有任何視覺回饋或計時。`event.buttons === 1`
